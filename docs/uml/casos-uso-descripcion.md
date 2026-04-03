@@ -1,101 +1,156 @@
 # Descripción de Casos de Uso — Sistema de Gestión de Taxis
 
-## CU-01: Registrar Solicitud de Servicio
+---
 
-**Actor:** Usuario del sistema  
-**Descripción:** Permite registrar una nueva solicitud de taxi indicando zona de origen, zona de destino, tipo de servicio y fecha/hora.  
-**Precondiciones:** Las zonas de origen y destino deben existir en el sistema.  
-**Flujo principal:**
-1. El usuario ingresa zona origen, zona destino, tipo de servicio y fecha/hora.
-2. El sistema valida que las zonas existan.
-3. El sistema crea la solicitud y la agrega a la cola de espera (FIFO).
-4. El sistema confirma el registro.
+## CU-01 · Registrar solicitud
 
-**Excepciones:** `ZonaNoExisteException`, `SolicitudInvalidaException`
+| Campo | Detalle |
+|---|---|
+| **Actor principal** | Operador |
+| **Precondición** | El operador está autenticado en el sistema. Las zonas de origen y destino existen en la red vial. |
+| **Postcondición** | La solicitud queda registrada con estado `EN_ESPERA` en la cola del sistema. |
+
+**Flujo principal**
+1. Operador ingresa zona de origen, destino y tipo de servicio.
+2. Sistema valida que los datos estén completos y las zonas existan.
+3. Sistema crea la solicitud con fecha/hora actual y estado `EN_ESPERA`.
+4. Sistema encola la solicitud y confirma el registro.
+
+**Flujos alternos**
+- Zona no existe → lanza `ZonaNoExisteException`, se notifica al operador.
+- Datos incompletos → lanza `SolicitudInvalidaException`.
 
 ---
 
-## CU-02: Listar Cola de Espera
+## CU-02 · Listar solicitudes en espera
 
-**Actor:** Usuario del sistema  
-**Descripción:** Muestra todas las solicitudes pendientes ordenadas por orden de llegada (FIFO).  
-**Precondiciones:** Ninguna.  
-**Flujo principal:**
-1. El usuario solicita ver la cola de espera.
-2. El sistema muestra todas las solicitudes en orden de llegada con su información.
+| Campo | Detalle |
+|---|---|
+| **Actor principal** | Operador |
+| **Precondición** | El operador está autenticado. |
+| **Postcondición** | El sistema muestra la cola de solicitudes ordenada por llegada. |
 
----
+**Flujo principal**
+1. Operador solicita ver la cola de espera.
+2. Sistema consulta `GestorSolicitudes` y retorna la lista en orden FIFO.
+3. Se muestra id, zona origen/destino, tipo de servicio y hora de registro.
 
-## CU-03: Cancelar Solicitud en Cola
-
-**Actor:** Usuario del sistema  
-**Descripción:** Permite cancelar una solicitud que aún se encuentra en la cola de espera, requiriendo una justificación.  
-**Precondiciones:** La solicitud debe estar en estado pendiente.  
-**Flujo principal:**
-1. El usuario selecciona la solicitud a cancelar e ingresa una justificación.
-2. El sistema verifica que la solicitud esté en cola.
-3. El sistema cancela la solicitud y registra la justificación.
-
-**Excepciones:** `CancelacionInvalidaException`
+**Flujos alternos**
+- Cola vacía → sistema informa que no hay solicitudes pendientes.
 
 ---
 
-## CU-04: Asignar Conductor a Solicitud
+## CU-03 · Atender solicitud
 
-**Actor:** Sistema (automático)  
-**Descripción:** Asigna automáticamente el primer conductor disponible, habilitado para el tipo de servicio y con conectividad vial hacia la zona destino.  
-**Precondiciones:** Debe haber al menos una solicitud en cola y un conductor disponible habilitado.  
-**Flujo principal:**
-1. El sistema toma la primera solicitud de la cola.
-2. El sistema busca un conductor disponible habilitado para el tipo de servicio.
-3. El sistema verifica conectividad vial desde la zona del conductor hasta la zona destino.
-4. El sistema asigna el conductor y calcula la tarifa estimada.
+| Campo | Detalle |
+|---|---|
+| **Actor principal** | Operador |
+| **Precondición** | Existe al menos una solicitud `EN_ESPERA`. Hay conductores registrados en el sistema. |
+| **Postcondición** | La solicitud pasa a `EN_ATENCION` con conductor, tarifa y tiempo estimado asignados. |
 
-**Excepciones:** `ConductorNoHabilitadoException`, `SinConectividadVialException`
+**Flujo principal**
+1. Operador solicita atender la siguiente solicitud.
+2. Sistema extrae la solicitud al frente de la cola.
+3. Sistema invoca «include» CU-04 (Asignar conductor).
+4. Sistema invoca «include» CU-05 (Calcular tarifa y ruta).
+5. Sistema actualiza estado a `EN_ATENCION` y muestra resumen.
 
----
-
-## CU-05: Calcular Tarifa Estimada
-
-**Actor:** Sistema (automático)  
-**Descripción:** Calcula la tarifa estimada de un servicio según la distancia entre zonas y el tipo de taxi asignado (base $5.000 COP).  
-**Precondiciones:** La solicitud debe tener un conductor asignado.  
-**Flujo principal:**
-1. El sistema obtiene la distancia entre zona origen y destino.
-2. El sistema invoca `calcularTarifa(distancia)` sobre el `TipoServicio` correspondiente.
-3. El sistema retorna la tarifa calculada.
+**Flujos alternos**
+- Sin conductor disponible → notifica operador, solicitud vuelve a cola.
+- Sin conectividad vial → lanza `SinConectividadVialException`.
 
 ---
 
-## CU-06: Cerrar Servicio
+## CU-04 · Asignar conductor
 
-**Actor:** Usuario del sistema  
-**Descripción:** Cierra un servicio en curso, ya sea por finalización exitosa o por cancelación del usuario.  
-**Precondiciones:** El servicio debe estar en estado activo (conductor asignado).  
-**Flujo principal:**
-1. El usuario selecciona el servicio activo y elige el motivo de cierre.
-2. El sistema registra el estado final (COMPLETADO o CANCELADO), tiempos y tarifa.
-3. El sistema libera al conductor.
+| Campo | Detalle |
+|---|---|
+| **Actor principal** | Sistema (invocado desde CU-03) |
+| **Precondición** | Solicitud válida con tipo de servicio definido. |
+| **Postcondición** | Se retorna un conductor disponible y habilitado para el tipo de servicio. |
 
----
+**Flujo principal**
+1. `AsignadorConductor` filtra conductores disponibles.
+2. Verifica que el conductor esté habilitado para el tipo de servicio.
+3. Verifica que exista ruta habilitada hacia la zona de origen.
+4. Retorna el primer conductor válido encontrado.
 
-## CU-07: Consultar Historial de Solicitudes
-
-**Actor:** Usuario del sistema  
-**Descripción:** Muestra el historial de todas las solicitudes con su estado final, conductor asignado, tiempos y tarifa.  
-**Precondiciones:** Ninguna.  
-**Flujo principal:**
-1. El usuario solicita ver el historial.
-2. El sistema muestra todas las solicitudes cerradas con información completa.
+**Flujos alternos**
+- Conductor no habilitado para el tipo → lanza `ConductorNoHabilitadoException`.
+- Sin ruta habilitada → lanza `SinConectividadVialException`.
 
 ---
 
-## CU-08: Reportar Cierre Vial
+## CU-05 · Calcular tarifa y ruta
 
-**Actor:** Conductor  
-**Descripción:** Permite a un conductor reportar un cierre vial en una ruta específica, lo que tiene efecto inmediato en las asignaciones futuras.  
-**Precondiciones:** La ruta debe existir en el grafo de conectividad.  
-**Flujo principal:**
-1. El conductor reporta el cierre de una ruta entre dos zonas.
-2. El sistema deshabilita esa conexión en el grafo de conectividad vial.
-3. Las asignaciones futuras ya no considerarán esa ruta como disponible.
+| Campo | Detalle |
+|---|---|
+| **Actor principal** | Sistema (invocado desde CU-03) |
+| **Precondición** | Existe ruta habilitada entre origen y destino. |
+| **Postcondición** | Se calcula la distancia, tarifa estimada y tiempo de llegada. |
+
+**Flujo principal**
+1. `RedVial` calcula la distancia en km entre origen y destino.
+2. `TipoServicio.calcularTarifa(distancia)` retorna la tarifa estimada.
+3. Sistema estima tiempo de llegada según distancia.
+
+**Flujos alternos**
+- No hay ruta habilitada → lanza `SinConectividadVialException`.
+
+---
+
+## CU-06 · Cancelar solicitud
+
+| Campo | Detalle |
+|---|---|
+| **Actor principal** | Operador |
+| **Precondición** | La solicitud existe y está en estado `EN_ESPERA` o `EN_ATENCION`. |
+| **Postcondición** | Solicitud pasa a `CANCELADA` con motivo registrado. Conductor queda disponible nuevamente. |
+
+**Flujo principal**
+1. Operador selecciona la solicitud e ingresa un motivo.
+2. Sistema valida que la solicitud pueda cancelarse.
+3. Sistema actualiza estado a `CANCELADA` y libera al conductor asignado.
+4. Sistema registra la cancelación en el historial.
+
+**Flujos alternos**
+- Solicitud ya `FINALIZADA` → lanza `CancelacionInvalidaException`.
+- Motivo vacío → sistema solicita justificación obligatoria.
+
+---
+
+## CU-07 · Finalizar servicio
+
+| Campo | Detalle |
+|---|---|
+| **Actor principal** | Operador |
+| **Precondición** | La solicitud está `EN_ATENCION` con conductor asignado. |
+| **Postcondición** | Solicitud pasa a `FINALIZADA`. Conductor disponible. Registro guardado en historial y persistido. |
+
+**Flujo principal**
+1. Operador indica finalización del servicio.
+2. Sistema actualiza estado a `FINALIZADA`.
+3. Sistema libera al conductor y lo marca disponible.
+4. Sistema guarda el registro en historial (include persistencia).
+
+**Flujos alternos**
+- Error al guardar → notifica fallo de persistencia; el estado lógico sí se actualiza.
+
+---
+
+## CU-08 · Reportar cierre vial
+
+| Campo | Detalle |
+|---|---|
+| **Actor principal** | Conductor |
+| **Precondición** | La conexión vial reportada existe en el sistema. |
+| **Postcondición** | La conexión queda deshabilitada. Futuras asignaciones no usarán esa ruta. |
+
+**Flujo principal**
+1. Conductor reporta cierre indicando zona origen y destino de la conexión.
+2. Sistema busca la `ConexionVial` correspondiente en `RedVial`.
+3. Sistema la deshabilita y confirma el cambio.
+
+**Flujos alternos**
+- Conexión no existe → lanza `ZonaNoExisteException`.
+- Conexión ya deshabilitada → sistema informa que ya está cerrada.
