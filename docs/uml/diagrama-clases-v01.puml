@@ -1,0 +1,149 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+abstract class TipoServicio {
+  - nombre : String
+  - descripcion : String
+  + getNombre() : String
+  + getDescripcion() : String
+  + calcularTarifa(distancia : double) : double
+}
+
+class TaxiEstandar {
+  + calcularTarifa(distancia : double) : double
+}
+class TaxiBaul {
+  + calcularTarifa(distancia : double) : double
+}
+class TaxiMascotas {
+  + calcularTarifa(distancia : double) : double
+}
+
+TipoServicio <|-- TaxiEstandar
+TipoServicio <|-- TaxiBaul
+TipoServicio <|-- TaxiMascotas
+
+class TipoServicioFactory <<Factory Method>> {
+  + crear(tipo : String) : TipoServicio
+}
+
+TipoServicioFactory ..> TipoServicio : crea
+
+class Zona {
+  - id : String
+  - nombre : String
+  + getId() : String
+  + getNombre() : String
+  + equals() : boolean
+  + toString() : String
+}
+
+class ConexionVial {
+  - distanciaKm : double
+  - habilitada : boolean
+  + habilitar() : void
+  + deshabilitar() : void
+  + estaHabilitada() : boolean
+  + getDistancia() : double
+}
+ConexionVial --> "origen" Zona
+ConexionVial --> "destino" Zona
+
+class RedVial {
+  - zonas : List~Zona~
+  - conexiones : List~ConexionVial~
+  + agregarZona(z : Zona) : void
+  + agregarConexion(c : ConexionVial) : void
+  + existeRuta(o : Zona, d : Zona) : boolean
+  + calcularDistancia(o : Zona, d : Zona) : double
+  + getZonas() : List~Zona~
+}
+RedVial *-- "1..*" Zona
+RedVial *-- "0..*" ConexionVial
+
+class Conductor {
+  - nombre : String
+  - cedula : String
+  - placa : String
+  - tiposHabilitados : List~TipoServicio~
+  - disponible : boolean
+  + estaDisponible() : boolean
+  + estaHabilitadoPara(t : TipoServicio) : boolean
+  + setDisponible(d : boolean) : void
+  + getPlaca() : String
+  + getNombre() : String
+  + getCedula() : String
+}
+Conductor --> "1..*" TipoServicio
+
+enum EstadoSolicitud {
+  EN_ESPERA
+  EN_ATENCION
+  CANCELADA
+  FINALIZADA
+}
+
+class Solicitud {
+  - id : String
+  - fechaHora : LocalDateTime
+  - tarifaEstimada : double
+  - tiempoEstimado : int
+  + getEstado() : EstadoSolicitud
+  + setEstado(e : EstadoSolicitud) : void
+  + asignarConductor(c : Conductor) : void
+  + cancelar(motivo : String) : void
+  + finalizar() : void
+  + toString() : String
+}
+Solicitud --> "origen" Zona
+Solicitud --> "destino" Zona
+Solicitud --> TipoServicio
+Solicitud --> "0..1" Conductor
+Solicitud ..> EstadoSolicitud : usa
+
+class GestorSolicitudes {
+  - cola : Queue~Solicitud~
+  - historial : List~Solicitud~
+  + recibirSolicitud(s : Solicitud) : void
+  + siguienteSolicitud() : Solicitud
+  + cancelarSolicitud(id : String, motivo : String) : void
+  + listarEnEspera() : List~Solicitud~
+  + getHistorial() : List~Solicitud~
+}
+GestorSolicitudes *-- "0..*" Solicitud
+
+class AsignadorConductor {
+  - conductores : List~Conductor~
+  + asignar(s : Solicitud, red : RedVial) : Conductor
+}
+AsignadorConductor --> "1..*" Conductor
+AsignadorConductor ..> RedVial : usa
+
+class Operador {
+  - nombre : String
+  - id : String
+  + atenderSolicitud() : void
+  + cancelarSolicitud() : void
+}
+Operador ..> GestorSolicitudes : usa
+
+class PersistenciaManager {
+  + guardarConductores(lista : List~Conductor~) : void
+  + cargarConductores() : List~Conductor~
+  + guardarSolicitudes(lista : List~Solicitud~) : void
+  + cargarSolicitudes() : List~Solicitud~
+  + guardarRedVial(red : RedVial) : void
+  + cargarRedVial() : RedVial
+}
+PersistenciaManager ..> Conductor : usa
+PersistenciaManager ..> Solicitud : usa
+PersistenciaManager ..> RedVial : usa
+
+class ZonaNoExisteException extends RuntimeException
+class ConductorNoHabilitadoException extends RuntimeException
+class SinConectividadVialException extends RuntimeException
+class SolicitudInvalidaException extends RuntimeException
+class CancelacionInvalidaException extends RuntimeException
+
+@enduml
