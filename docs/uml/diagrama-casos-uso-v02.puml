@@ -1,0 +1,40 @@
+@startuml
+left to right direction
+skinparam shadowing false
+skinparam actorStyle awesome
+
+actor Usuario as us 
+actor Operador as op
+actor Conductor as cond
+
+
+rectangle "Sistema de Gestión de Taxis" {
+
+  usecase "Registrar solicitud" as CU01
+  usecase "Listar solicitudes\nen espera" as CU02
+  usecase "Atender solicitud" as CU03
+  usecase "Asignar conductor" as CU04
+  usecase "Calcular tarifa\ny ruta" as CU05
+  usecase "Cancelar solicitud" as CU06
+  usecase "Finalizar servicio" as CU07
+  usecase "Reportar cierre vial" as CU08
+
+  CU03 .> CU04 : <include>
+  CU03 .> CU05 : <include>
+  CU06 .> CU03 : <extends>
+}
+
+
+us--> op
+op --> CU01
+op --> CU02
+op --> CU03
+op --> CU06
+op --> CU07
+
+cond --> CU08
+
+database "Sistema de archivos" as fs 
+ CU07 ..> fs   : <include>
+
+@enduml

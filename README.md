@@ -114,13 +114,13 @@ java -cp out com.taxicooperativa.ui.Main
 
 ##  Diagramas UML
 
-### Diagrama de Clases v0.1
-![Diagrama de Clases](docs/uml/diagrama-clases-v01.png)
+### Diagrama de Clases v0.2
+![Diagrama de Clases](docs/uml/diagrama-clases-v02.png)
 
 > Ver descripción textual completa de las clases en [`docs/uml/casos-uso-descripcion.md`](docs/uml/diagrama-clases-v01.puml)
 
-### Diagrama de Casos de Uso v0.1
-![Diagrama de Casos de Uso](docs/uml/diagrama-casos-uso-v01.png)
+### Diagrama de Casos de Uso v0.2
+![Diagrama de Casos de Uso](docs/uml/diagrama-casos-uso-v02.png)
 
 > Ver descripción textual completa de los 8 casos de uso en [`docs/uml/casos-uso-descripcion.md`](docs/uml/casos-uso-descripcion.md)
 
