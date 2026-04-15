@@ -100,7 +100,7 @@ taxi-cooperativa/
 
 ```bash
 # 1. Clonar el repositorio
-git clone https://github.com/tu-usuario/taxi-cooperativa.git
+git clone https://github.com/Menteenblanc0/app-taxi.git
 cd taxi-cooperativa
 
 # 2. Compilar
