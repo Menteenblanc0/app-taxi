@@ -104,7 +104,7 @@ git clone https://github.com/Menteenblanc0/app-taxi.git
 cd taxi-cooperativa
 
 # 2. Compilar
-javac -d out src/main/java/com/taxicooperativa/**/*.java
+javac -d out src/main/java/com/taxicooperativa/ui/Main.java
 
 # 3. Ejecutar
 java -cp out com.taxicooperativa.ui.Main
