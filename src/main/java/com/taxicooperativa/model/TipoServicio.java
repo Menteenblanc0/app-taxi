@@ -11,5 +11,7 @@ public abstract class TipoServicio {
     public String getNombre() {
         return nombre;
     }
+
+    // funcion abstracta con la que cada subclase calculara su tarifa
     public abstract double calcularTarifa(double distancia);
 }
