@@ -8,28 +8,29 @@ public class Conductor {
     private String cedula;
     private String placa;
     private List<TipoServicio> tiposHabilitados;
-    private boolean disponible = true;
+    private boolean disponible;
 
     public Conductor(String nombre, String cedula, String placa,List<TipoServicio> tiposHabilitados){
         this.nombre = nombre;
         this.cedula = cedula;
         this.placa = placa;
         this.tiposHabilitados = tiposHabilitados;
+        this.disponible = true;
     }
 
-    public void estaDisponible(boolean d){
-        disponible = d;
+    public void setDisponible(boolean disponible){
+        this.disponible = disponible;
     }
 
-    public boolean estaHabilitadoPara(TipoServicio t){
-        boolean sw = false;
-        for (TipoServicio tipoServicios : tiposHabilitados) {
-            if (tipoServicios == t){
-                sw = true;
-                break;
-            }
+    public boolean estaDisponible(){
+        return disponible;
+    }
+
+    public boolean estaHabilitadoPara(TipoServicio tipo){
+        for (TipoServicio t : tiposHabilitados) {
+            if (t.equals(tipo)) return true;
         }
-        return sw;
+        return false;
     }
 
     public String getNombre() {
@@ -42,5 +43,14 @@ public class Conductor {
 
     public String getPlaca() {
         return placa;
+    }
+
+    @Override
+    public String toString() {
+        return "Conductor[" + cedula + " - " + nombre +
+                " | Placa: " + placa +
+                " | " +
+                (disponible ? "Disponible" : "Ocupado") +
+                "]";
     }
 }

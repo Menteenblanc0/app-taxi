@@ -19,11 +19,20 @@ public class Zona {
 
     @Override
     public boolean equals(Object obj) {
-        return super.equals(obj);
+        if (this == obj) return true;
+        if (obj == null) return false;
+        if (!(obj instanceof Zona)) return false;
+        Zona otra = (Zona) obj;
+        return this.zonaId.equals(otra.zonaId);
+    }
+
+    @Override
+    public int hashCode() {
+        return zonaId.hashCode();
     }
 
     @Override
     public String toString() {
-        return super.toString();
+        return "Zona[" +zonaId+" - "+ zonaNombre+"]";
     }
 }
