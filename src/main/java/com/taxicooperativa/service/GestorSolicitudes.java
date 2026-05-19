@@ -38,14 +38,7 @@ public class GestorSolicitudes {
     public void cancelarSolicitud(String id, String motivo) {
         for (Solicitud s : cola) {
             if (s.getId().equals(id)) {
-                if (s.getEstadoSolicitud() == EstadoSolicitud.FINALIZADA) {
-                    throw new CancelacionInvalidaException(
-                            "No se puede cancelar una solicitud ya finalizada"
-                    );
-                }
-
                 s.cancelar(motivo);
-
                 if (s.getConductorAsignado() != null) {
                     s.getConductorAsignado().setDisponible(true);
                 }
@@ -54,7 +47,29 @@ public class GestorSolicitudes {
                 return;
             }
         }
-        throw new SolicitudInvalidaException("No se encontro la solicitud con id: " + id);
+
+        for (Solicitud s : historial) {
+            if (s.getId().equals(id)) {
+                if (s.getEstadoSolicitud() == EstadoSolicitud.FINALIZADA) {
+                    throw new CancelacionInvalidaException(
+                            "No se puede cancelar una solicitud ya finalizada."
+                    );
+                }
+                if (s.getEstadoSolicitud() == EstadoSolicitud.CANCELADA) {
+                    throw new CancelacionInvalidaException(
+                            "La solicitud ya está cancelada."
+                    );
+                }
+                s.cancelar(motivo);
+                if (s.getConductorAsignado() != null) {
+                    s.getConductorAsignado().setDisponible(true);
+                }
+                return;
+            }
+        }
+        throw new SolicitudInvalidaException(
+                "No se encontró la solicitud con id: " + id
+        );
     }
 
     public void finalizarSolicitud(Solicitud s) {
@@ -76,4 +91,9 @@ public class GestorSolicitudes {
     public boolean colaVacia() {
         return cola.isEmpty();
     }
+
+    public void devolverSolicitud(Solicitud s) {
+        ((LinkedList<Solicitud>) cola).addFirst(s); // la pone de vuelta al frente
+    }
+
 }

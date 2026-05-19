@@ -41,13 +41,19 @@ public class Operador {
         }
     }
 
-    public void atenderSolicitud(){
+    public void atenderSolicitud() {
         Solicitud s = gestor.siguienteSolicitud();
-        Conductor c = asignador.asignar(s, red);
-        System.out.println("Solicitud atendida:");
-        System.out.println("  " + s);
-        System.out.println("  Conductor asignado: " + c);
-        PersistenceManager.guardarSolicitudes(gestor.getHistorial());
+        try {
+            Conductor c = asignador.asignar(s, red);
+            gestor.getHistorial().add(s);
+            System.out.println("Solicitud atendida:");
+            System.out.println("  " + s);
+            System.out.println("  Conductor asignado: " + c);
+            PersistenceManager.guardarSolicitudes(gestor.getHistorial());
+        } catch (Exception e) {
+            gestor.devolverSolicitud(s);
+            throw e;
+        }
     }
 
     public void cancelarSolicitud(String id, String motivo){

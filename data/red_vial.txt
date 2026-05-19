@@ -1,0 +1,6 @@
+Z1;Centro;Z2;Norte;5.0;false
+Z1;Centro;Z3;Sur;8.0;true
+Z2;Norte;Z4;Oriente;6.0;true
+Z3;Sur;Z4;Oriente;4.0;true
+Z2;Norte;Z1;Centro;5.0;true
+Z4;Oriente;Z1;Centro;9.0;true
