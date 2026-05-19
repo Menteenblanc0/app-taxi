@@ -53,4 +53,8 @@ public class Conductor {
                 (disponible ? "Disponible" : "Ocupado") +
                 "]";
     }
+
+    public List<TipoServicio> getTiposHabilitados() {
+        return tiposHabilitados;
+    }
 }

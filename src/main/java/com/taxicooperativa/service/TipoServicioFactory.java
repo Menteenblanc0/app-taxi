@@ -7,7 +7,7 @@ import com.taxicooperativa.model.TipoServicio;
 
 public class TipoServicioFactory {
 
-    public TipoServicio crear(String tipo){
+    public static TipoServicio crear(String tipo){
         switch (tipo.toUpperCase()) {
             case "ESTANDAR": return new TaxiEstandar();
             case "BAUL": return new TaxiBaul();
