@@ -48,7 +48,7 @@ public class PersistenceManager {
                 String cedula = partes[1];
                 String placa = partes[2];
                 boolean disponible = Boolean.parseBoolean(partes[3]);
-                String[] tipoArr = partes[4].split(";");
+                String[] tipoArr = partes[4].split(",");
 
                 List<TipoServicio> tipos = new ArrayList<>();
                 for (String t : tipoArr) {

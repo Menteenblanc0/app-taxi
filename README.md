@@ -126,12 +126,6 @@ java -cp out com.taxicooperativa.ui.Main
 
 ---
 
-##  Evidencias de prueba
-
-> *Capturas y resultados de prueba se agregarán en el seguimiento de la semana 16.*
-
----
-
 ##  Equipo
 
 | Integrante | GitHub |
