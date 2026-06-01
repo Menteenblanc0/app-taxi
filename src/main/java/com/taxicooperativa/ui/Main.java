@@ -56,20 +56,33 @@ public class Main {
         // cargar red vial desde archivo o crear datos de prueba
         red = PersistenceManager.cargarRedVial();
         if (red.getZonas().isEmpty()) {
-            Zona z1 = new Zona("Z1", "Centro");
-            Zona z2 = new Zona("Z2", "Norte");
-            Zona z3 = new Zona("Z3", "Sur");
-            Zona z4 = new Zona("Z4", "Oriente");
+            Zona z1 = new Zona("Z1", "Norte");
+            Zona z2 = new Zona("Z2", "Este");
+            Zona z3 = new Zona("Z3", "Oeste");
+            Zona z4 = new Zona("Z4", "Sur");
 
             red.agregarZona(z1); red.agregarZona(z2);
             red.agregarZona(z3); red.agregarZona(z4);
 
+            //Esto fue pensado en un sistema de vias de doble carril con la probabilidad de que una via se cierre, pero la otra siga abierta
+
             red.agregarConexion(new ConexionVial(z1, z2, 5.0));
-            red.agregarConexion(new ConexionVial(z1, z3, 8.0));
-            red.agregarConexion(new ConexionVial(z2, z4, 6.0));
-            red.agregarConexion(new ConexionVial(z3, z4, 4.0));
             red.agregarConexion(new ConexionVial(z2, z1, 5.0));
+
+            red.agregarConexion(new ConexionVial(z1, z3, 8.0));
+            red.agregarConexion(new ConexionVial(z3, z1, 8.0));
+
+            red.agregarConexion(new ConexionVial(z3, z4, 4.0));
+            red.agregarConexion(new ConexionVial(z4, z3, 4.0));
+
             red.agregarConexion(new ConexionVial(z4, z1, 9.0));
+            red.agregarConexion(new ConexionVial(z1, z4, 9.0));
+
+            red.agregarConexion(new ConexionVial(z2, z4, 6.0));
+            red.agregarConexion(new ConexionVial(z4, z2, 6.0));
+
+            red.agregarConexion(new ConexionVial(z2, z3, 7.0));
+            red.agregarConexion(new ConexionVial(z3, z2, 7.0));
 
             PersistenceManager.guardarRedVial(red);
             System.out.println("Red vial inicializada con datos de prueba.");
@@ -83,6 +96,8 @@ public class Main {
             TipoServicio baul      = TipoServicioFactory.crear("BAUL");
             TipoServicio mascotas  = TipoServicioFactory.crear("MASCOTAS");
 
+
+            //Aclaracion: La informacion de los conductores fue suministrada por mis amigos
             conductores = Arrays.asList(
                     new Conductor("Iza Jaimes",  "20077725", "123456",
                             Arrays.asList(estandar, baul)),
@@ -186,7 +201,7 @@ public class Main {
         System.out.println("\n--- Cancelar solicitud ---");
         System.out.print("ID de la solicitud: ");
         String id = scanner.nextLine().trim();
-        System.out.print("Motivo: ");
+        System.out.println("Motivo: ");
         String motivo = scanner.nextLine().trim();
         if (motivo.isEmpty()) {
             System.out.println("Error: el motivo es obligatorio.");

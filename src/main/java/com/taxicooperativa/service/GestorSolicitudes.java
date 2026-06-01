@@ -77,7 +77,6 @@ public class GestorSolicitudes {
         if (s.getConductorAsignado() != null) {
             s.getConductorAsignado().setDisponible(true);
         }
-        historial.add(s);
     }
 
     public List<Solicitud> listarEnEspera() {

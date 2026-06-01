@@ -1,0 +1,224 @@
+@startuml diagrama_clases_v03
+left to right direction
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+' ══════════════════════════════
+' Paquete model
+' ══════════════════════════════
+package model {
+
+  abstract class TipoServicio {
+    - nombre : String
+    - descripcion : String
+    + getNombre() : String
+    + getDescripcion() : String
+    + calcularTarifa(distancia : double) : double
+    + equals(obj : Object) : boolean
+    + hashCode() : int
+  }
+
+  class TaxiEstandar {
+    + calcularTarifa(distancia : double) : double
+    ' 5000 + (distancia * 2500)
+  }
+
+  class TaxiBaul {
+    + calcularTarifa(distancia : double) : double
+    ' 5000 + (distancia * 4000)
+  }
+
+  class TaxiMascotas {
+    + calcularTarifa(distancia : double) : double
+    ' 5000 + (distancia * 6000)
+  }
+
+  TipoServicio <|-- TaxiEstandar
+  TipoServicio <|-- TaxiBaul
+  TipoServicio <|-- TaxiMascotas
+
+  class Zona {
+    - zonaId : String
+    - zonaNombre : String
+    + getZonaId() : String
+    + getZonaNombre() : String
+    + equals(obj : Object) : boolean
+    + hashCode() : int
+    + toString() : String
+  }
+
+  class ConexionVial {
+    - distanciaKm : double
+    - habilitada : boolean
+    + getOrigen() : Zona
+    + getDestino() : Zona
+    + habilitar() : void
+    + deshabilitar() : void
+    + estaHabilitada() : boolean
+    + getDistanciaKm() : double
+    + equals(obj : Object) : boolean
+    + hashCode() : int
+    + toString() : String
+  }
+  ConexionVial --> "origen" Zona
+  ConexionVial --> "destino" Zona
+
+  enum EstadoSolicitud {
+    EN_ESPERA
+    EN_ATENCION
+    CANCELADA
+    FINALIZADA
+  }
+
+  class Conductor {
+    - nombre : String
+    - cedula : String
+    - placa : String
+    - tiposHabilitados : List~TipoServicio~
+    - disponible : boolean
+    + estaDisponible() : boolean
+    + estaHabilitadoPara(tipo : TipoServicio) : boolean
+    + setDisponible(d : boolean) : void
+    + getNombre() : String
+    + getCedula() : String
+    + getPlaca() : String
+    + getTiposHabilitados() : List~TipoServicio~
+    + toString() : String
+  }
+  Conductor --> "1..*" TipoServicio
+
+  class Solicitud {
+    - id : String
+    - fechaHora : LocalDateTime
+    - estadoSolicitud : EstadoSolicitud
+    - tarifaEstimada : double
+    - tiempoEstimado : int
+    + asignarConductor(c : Conductor, tarifa : double, tiempoMin : int) : void
+    + cancelar(motivo : String) : void
+    + finalizar() : void
+    + getEstadoSolicitud() : EstadoSolicitud
+    + setEstadoSolicitud(e : EstadoSolicitud) : void
+    + getConductorAsignado() : Conductor
+    + getTarifaEstimada() : double
+    + getTiempoEstimado() : int
+    + toString() : String
+  }
+  Solicitud --> "origen" Zona
+  Solicitud --> "destino" Zona
+  Solicitud --> TipoServicio
+  Solicitud --> "0..1" Conductor
+  Solicitud ..> EstadoSolicitud : usa
+
+}
+
+' ══════════════════════════════
+' Paquete service
+' ══════════════════════════════
+package service {
+
+  class TipoServicioFactory <<Factory Method>> {
+    + {static} crear(tipo : String) : TipoServicio
+  }
+  TipoServicioFactory ..> TipoServicio : crea
+
+  class RedVial {
+    - zonas : List~Zona~
+    - conexiones : List~ConexionVial~
+    + agregarZona(z : Zona) : void
+    + agregarConexion(c : ConexionVial) : void
+    + existeRuta(origen : Zona, destino : Zona) : boolean
+    + calcularDistancia(origen : Zona, destino : Zona) : double
+    + deshabilitarConexion(origen : Zona, destino : Zona) : void
+    + getZonas() : List~Zona~
+    + getConexiones() : List~ConexionVial~
+  }
+  RedVial *-- "1..*" Zona
+  RedVial *-- "0..*" ConexionVial
+
+  class GestorSolicitudes {
+    - cola : Queue~Solicitud~
+    - historial : List~Solicitud~
+    + recibirSolicitud(s : Solicitud) : void
+    + siguienteSolicitud() : Solicitud
+    + cancelarSolicitud(id : String, motivo : String) : void
+    + finalizarSolicitud(s : Solicitud) : void
+    + listarEnEspera() : List~Solicitud~
+    + getHistorial() : List~Solicitud~
+    + colaVacia() : boolean
+    + devolverSolicitud(s : Solicitud) : void
+  }
+  GestorSolicitudes *-- "0..*" Solicitud
+
+  class AsignadorConductor {
+    - conductores : List~Conductor~
+    + agregarConductor(c : Conductor) : void
+    + asignar(s : Solicitud, red : RedVial) : Conductor
+    + getConductores() : List~Conductor~
+  }
+  AsignadorConductor --> "1..*" Conductor
+  AsignadorConductor ..> RedVial : usa
+
+  class Operador {
+    - nombre : String
+    - id : String
+    + registrarSolicitud(id : String, origen : Zona, destino : Zona, tipo : TipoServicio) : void
+    + listarSolicitudesEnEspera() : void
+    + atenderSolicitud() : void
+    + cancelarSolicitud(id : String, motivo : String) : void
+    + finalizarServicio(s : Solicitud) : void
+    + reportarCierreVial(origen : Zona, destino : Zona) : void
+    + getNombre() : String
+    + getId() : String
+  }
+  Operador ..> GestorSolicitudes : usa
+  Operador ..> AsignadorConductor : usa
+  Operador ..> RedVial : usa
+
+}
+
+' ══════════════════════════════
+' Paquete persistence
+' ══════════════════════════════
+package persistence {
+
+  class PersistenceManager {
+    - {static} ARCHIVO_CONDUCTORES : String
+    - {static} ARCHIVO_RED_VIAL : String
+    - {static} ARCHIVO_SOLICITUDES : String
+    + {static} guardarConductores(lista : List~Conductor~) : void
+    + {static} cargarConductores() : List~Conductor~
+    + {static} guardarRedVial(red : RedVial) : void
+    + {static} cargarRedVial() : RedVial
+    + {static} guardarSolicitudes(lista : List~Solicitud~) : void
+  }
+  PersistenceManager ..> Conductor : usa
+  PersistenceManager ..> Solicitud : usa
+  PersistenceManager ..> RedVial : usa
+  PersistenceManager ..> TipoServicioFactory : usa
+
+}
+
+' ══════════════════════════════
+' Paquete exception
+' ══════════════════════════════
+package exception {
+
+  class ZonaNoExisteException extends RuntimeException {
+    + ZonaNoExisteException(mensaje : String)
+  }
+  class SolicitudInvalidaException extends RuntimeException {
+    + SolicitudInvalidaException(mensaje : String)
+  }
+  class ConductorNoHabilitadoException extends RuntimeException {
+    + ConductorNoHabilitadoException(mensaje : String)
+  }
+  class SinConectividadVialException extends RuntimeException {
+    + SinConectividadVialException(mensaje : String)
+  }
+  class CancelacionInvalidaException extends RuntimeException {
+    + CancelacionInvalidaException(mensaje : String)
+  }
+
+}
+
+@enduml
